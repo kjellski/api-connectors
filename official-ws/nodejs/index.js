@@ -13,7 +13,7 @@ const endpoints = {
   production: 'wss://www.bitmex.com/realtime',
   testnet: 'wss://testnet.bitmex.com/realtime'
 };
-const noSymbolTables = BitMEXClient.noSymbolTables = [
+const noSymbolTables = (BitMEXClient.noSymbolTables = [
   'account',
   'affiliate',
   'funds',
@@ -26,7 +26,7 @@ const noSymbolTables = BitMEXClient.noSymbolTables = [
   'chat',
   'publicNotifications',
   'privateNotifications'
-];
+]);
 
 module.exports = BitMEXClient;
 
@@ -37,7 +37,7 @@ function BitMEXClient(options) {
     wildcard: true,
     delimiter: ':',
     maxListeners: Infinity,
-    newListener: true,
+    newListener: true
   });
   if (!options) options = {};
   this._data = {}; // internal data store keyed by [tableName][symbol]. Used by deltaParser.
@@ -47,7 +47,7 @@ function BitMEXClient(options) {
     options.endpoint = options.testnet ? endpoints.testnet : endpoints.production;
   }
   if (process.env.BITMEX_ENDPOINT) options.endpoint = process.env.BITMEX_ENDPOINT;
-  debug(options)
+  debug(options);
 
   this._setupListenerTracking();
 
@@ -132,15 +132,15 @@ BitMEXClient.prototype.addStream = function(symbol, tableName, callback) {
   }
   if (!this.socket.opened) {
     // Not open yet. Call this when open
-    return this.socket.once('open', () => client.addStream(symbol, tableName, callback))
+    return this.socket.once('open', () => client.addStream(symbol, tableName, callback));
   }
 
   // Massage arguments.
   if (typeof callback !== 'function') throw new Error('A callback must be passed to BitMEXClient#addStream.');
-
   else if (client.streams.all.indexOf(tableName) === -1) {
-    throw new Error('Unknown table for BitMEX subscription: ' + tableName +
-      '. Available tables are ' + client.streams.all + '.');
+    throw new Error(
+      'Unknown table for BitMEX subscription: ' + tableName + '. Available tables are ' + client.streams.all + '.'
+    );
   }
 
   addStreamHelper(client, symbol, tableName, callback);
@@ -148,8 +148,8 @@ BitMEXClient.prototype.addStream = function(symbol, tableName, callback) {
 
 BitMEXClient.prototype._setupListenerTracking = function() {
   // Keep track of listeners.
-  const listenerTree = this._listenerTree = {};
-  this.on('newListener', (eventName) => {
+  const listenerTree = (this._listenerTree = {});
+  this.on('newListener', eventName => {
     const split = eventName.split(':');
     if (split.length !== 3) return; // other events
 
@@ -158,21 +158,21 @@ BitMEXClient.prototype._setupListenerTracking = function() {
     if (!listenerTree[table][symbol]) listenerTree[table][symbol] = 0;
     listenerTree[table][symbol]++;
   });
-  this.on('removeListener', (eventName) => {
+  this.on('removeListener', eventName => {
     const split = eventName.split(':');
     if (split.length !== 3) return; // other events
     const [table, , symbol] = split;
     listenerTree[table][symbol]--;
   });
-}
+};
 
 BitMEXClient.prototype.subscriptionCount = function(table, symbol) {
-  return this._listenerTree[table] && this._listenerTree[table][symbol] || 0;
+  return (this._listenerTree[table] && this._listenerTree[table][symbol]) || 0;
 };
 
 BitMEXClient.prototype.sendSubscribeRequest = function(table, symbol) {
-  debug(JSON.stringify({op: 'subscribe', args: `${table}:${symbol}`}))
-  this.socket.send(JSON.stringify({op: 'subscribe', args: `${table}:${symbol}`}));
+  debug(JSON.stringify({ op: 'subscribe', args: `${table}:${symbol}` }));
+  this.socket.send(JSON.stringify({ op: 'subscribe', args: `${table}:${symbol}` }));
 };
 
 function addStreamHelper(client, symbol, tableName, callback) {
@@ -212,7 +212,7 @@ function addStreamHelper(client, symbol, tableName, callback) {
           newData.splice(0, newData.length - client._maxTableLen);
         }
         callback(newData, symbol, table);
-      } catch(e) {
+      } catch (e) {
         client.emit('error', e);
       }
     });
